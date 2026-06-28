@@ -1,7 +1,27 @@
+import 'dart:convert';
+
+import 'package:bookbukkit/classes/book_object.dart';
+import 'package:bookbukkit/classes/globals.dart';
 import 'package:bookbukkit/router.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+
+  List<String>? booksJson = sharedPreferences.getStringList('books');
+
+  if (booksJson != null) {
+    for (var i = 0; i < booksJson.length; i++) {
+      Map<String, dynamic> booksData = json.decode(booksJson[i]);
+
+      Globals.currentBooks.add(BookObject.fromJson(booksData));
+    }
+  }
+
   runApp(const MainApp());
 }
 

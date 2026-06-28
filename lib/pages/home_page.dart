@@ -45,6 +45,8 @@ class HomePage extends StatelessWidget {
                       pagesDone: 20,
                       totalPages: 300,
                       status: Status.reading,
+                      notes:
+                          "HELLLLLLLLLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
                     ),
                   ),
                 ],

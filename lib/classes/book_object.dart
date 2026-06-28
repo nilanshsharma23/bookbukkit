@@ -16,4 +16,26 @@ class BookObject {
     required this.status,
     this.notes = "",
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'author': author,
+      'pages_done': pagesDone,
+      'total_pages': pagesDone,
+      'status': status.value,
+      'notes': notes,
+    };
+  }
+
+  factory BookObject.fromJson(Map<String, dynamic> data) {
+    return BookObject(
+      title: data['title'],
+      author: data['author'],
+      pagesDone: data['pages_done'],
+      totalPages: data['total_pages'],
+      status: Status.fromString(data['status']),
+      notes: data['notes'],
+    );
+  }
 }
