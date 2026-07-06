@@ -1,6 +1,7 @@
 import 'package:bookbukkit/classes/status_enum.dart';
 
 class BookObject {
+  final String uid;
   final String title;
   final String author;
   final int pagesDone;
@@ -9,6 +10,7 @@ class BookObject {
   final String notes;
 
   BookObject({
+    required this.uid,
     required this.title,
     required this.author,
     required this.pagesDone,
@@ -19,6 +21,7 @@ class BookObject {
 
   Map<String, dynamic> toJson() {
     return {
+      'uid': uid,
       'title': title,
       'author': author,
       'pages_done': pagesDone,
@@ -30,6 +33,7 @@ class BookObject {
 
   factory BookObject.fromJson(Map<String, dynamic> data) {
     return BookObject(
+      uid: data['uid'],
       title: data['title'],
       author: data['author'],
       pagesDone: data['pages_done'],

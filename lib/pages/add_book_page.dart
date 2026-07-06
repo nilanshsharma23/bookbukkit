@@ -8,9 +8,12 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 class AddBookPage extends StatefulWidget {
-  const AddBookPage({super.key});
+  const AddBookPage({super.key, this.initialBookData});
+
+  final BookObject? initialBookData;
 
   @override
   State<AddBookPage> createState() => _AddBookPageState();
@@ -27,6 +30,20 @@ class _AddBookPageState extends State<AddBookPage> {
   Status status = Status.reading;
 
   bool loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.initialBookData != null) {
+      titleController.text = widget.initialBookData!.title;
+      authorController.text = widget.initialBookData!.author;
+      pagesDoneController.text = widget.initialBookData!.pagesDone.toString();
+      totalPagesController.text = widget.initialBookData!.totalPages.toString();
+      notesController.text = widget.initialBookData!.notes;
+      status = widget.initialBookData!.status;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -314,13 +331,6 @@ class _AddBookPageState extends State<AddBookPage> {
                       controller: notesController,
                       maxLines: null,
                       minLines: 3,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter something.';
-                        }
-
-                        return null;
-                      },
                     ),
                     SizedBox(height: 16),
                     SizedBox(
@@ -339,6 +349,7 @@ class _AddBookPageState extends State<AddBookPage> {
                               await SharedPreferences.getInstance();
 
                           BookObject bookObject = BookObject(
+                            uid: Uuid().v4(),
                             title: titleController.text,
                             author: authorController.text,
                             pagesDone: int.parse(pagesDoneController.text),
@@ -346,6 +357,13 @@ class _AddBookPageState extends State<AddBookPage> {
                             status: status,
                             notes: notesController.text,
                           );
+
+                          if (widget.initialBookData != null) {
+                            Globals.currentBooks.removeWhere(
+                              (element) =>
+                                  element.uid == widget.initialBookData!.uid,
+                            );
+                          }
 
                           Globals.currentBooks.add(bookObject);
 

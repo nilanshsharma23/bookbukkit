@@ -1,19 +1,34 @@
-import 'dart:math';
+import 'dart:convert';
 
 import 'package:bookbukkit/classes/book_object.dart';
+import 'package:bookbukkit/classes/globals.dart';
+import 'package:bookbukkit/pages/add_book_page.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/flutter_percent_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class BookWidget extends StatelessWidget {
-  const BookWidget({super.key, required this.bookObject});
+class BookWidget extends StatefulWidget {
+  const BookWidget({
+    super.key,
+    required this.bookObject,
+    required this.onEdited,
+  });
 
   final BookObject bookObject;
+  final void Function() onEdited;
+
+  @override
+  State<BookWidget> createState() => _BookWidgetState();
+}
+
+class _BookWidgetState extends State<BookWidget> {
+  final FocusNode buttonFocusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      padding: EdgeInsets.fromLTRB(16, 16, 8, 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(8),
@@ -28,21 +43,21 @@ class BookWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Random().nextBool() ? Icons.book_outlined : Icons.book,
-                    size: 64,
-                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        bookObject.title,
+                        widget.bookObject.title,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Text(bookObject.author, style: TextStyle(fontSize: 16)),
+                      Text(
+                        widget.bookObject.author,
+                        style: TextStyle(fontSize: 16),
+                      ),
                       SizedBox(height: 8),
                       Row(
                         children: [
@@ -56,7 +71,7 @@ class BookWidget extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              bookObject.status.label,
+                              widget.bookObject.status.label,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Theme.of(context).colorScheme.onTertiary,
@@ -65,7 +80,8 @@ class BookWidget extends StatelessWidget {
                           ),
                           LinearPercentIndicator(
                             percent:
-                                bookObject.pagesDone / bookObject.totalPages,
+                                widget.bookObject.pagesDone /
+                                widget.bookObject.totalPages,
                             progressColor: Theme.of(
                               context,
                             ).colorScheme.primary,
@@ -73,7 +89,7 @@ class BookWidget extends StatelessWidget {
                             barRadius: Radius.circular(8),
                           ),
                           Text(
-                            "${((bookObject.pagesDone / bookObject.totalPages) * 100).floor()}%",
+                            "${((widget.bookObject.pagesDone / widget.bookObject.totalPages) * 100).floor()}%",
                           ),
                         ],
                       ),
@@ -81,12 +97,67 @@ class BookWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              IconButton(onPressed: () {}, icon: Icon(Icons.more_vert)),
+              MenuAnchor(
+                menuChildren: [
+                  MenuItemButton(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AddBookPage(initialBookData: widget.bookObject),
+                        ),
+                      );
+                      setState(() {});
+                      widget.onEdited();
+                    },
+                    child: Text("Edit"),
+                  ),
+                  MenuItemButton(
+                    onPressed: () async {
+                      final SharedPreferences sharedPreferences =
+                          await SharedPreferences.getInstance();
+
+                      setState(() {
+                        Globals.currentBooks.removeWhere(
+                          (element) => element.uid == widget.bookObject.uid,
+                        );
+                      });
+
+                      await sharedPreferences.setStringList(
+                        'books',
+                        List.generate(
+                          Globals.currentBooks.length,
+                          (index) =>
+                              json.encode(Globals.currentBooks[index].toJson()),
+                        ),
+                      );
+
+                      widget.onEdited();
+                    },
+                    child: Text(
+                      "Delete",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+                builder: (context, controller, child) {
+                  return IconButton(
+                    onPressed: () {
+                      controller.isOpen
+                          ? controller.close()
+                          : controller.open();
+                    },
+                    icon: Icon(Icons.more_vert),
+                  );
+                },
+              ),
             ],
           ),
-          if (bookObject.notes.isNotEmpty)
+          if (widget.bookObject.notes.isNotEmpty)
             Text(
-              "\"${bookObject.notes}\"",
+              "\"${widget.bookObject.notes}\"",
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.secondary,
